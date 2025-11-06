@@ -6,7 +6,7 @@ namespace Request
 {
 	namespace Originals
 	{
-		inline static bool (*ProcessRequestOG)(Containers::FCurlHttpRequest);
+		inline static bool (*ProcessRequest)(Containers::FCurlHttpRequest HttpRequest);
 	}
 
 	bool ProcessRequest(Containers::FCurlHttpRequest);

@@ -12,7 +12,9 @@ void Main()
         SetConsoleTitleA("Platinum | https://github.com/1lunarxx/Platinum");
     }
 
+    MH_Initialize();
     Request::Patch();
+    MH_EnableHook(MH_ALL_HOOKS);
 }
 
 BOOL APIENTRY DllMain(HMODULE Module, DWORD Reason, LPVOID Reserved)
