@@ -8,8 +8,6 @@ bool Request::ProcessRequest(Containers::FCurlHttpRequest* HttpRequest)
     static int RequestCount = 0;
     RequestCount++;
 
-    std::wcout << "OLDURL: " << url << std::endl;
-
     // idk how else to do this
     if (RequestCount == 10)
     {
