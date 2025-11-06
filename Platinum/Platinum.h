@@ -4,5 +4,5 @@
 namespace Platinum
 {
 	static bool bConsole = true;
-	static const wchar_t* BackendURL = L"https://localhost:3551";
+	static const wchar_t* BackendURL = L"http://localhost:3551";
 }
