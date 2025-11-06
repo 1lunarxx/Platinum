@@ -8,6 +8,8 @@ bool Request::ProcessRequest(Containers::FCurlHttpRequest* HttpRequest)
     static int RequestCount = 0;
     RequestCount++;
 
+    std::wcout << "OLDURL: " << url << std::endl;
+
     // idk how else to do this
     if (RequestCount == 10)
     {
@@ -32,19 +34,29 @@ bool Request::ProcessRequest(Containers::FCurlHttpRequest* HttpRequest)
         }
     }
 
-    if (url && std::wcsstr(url, L"epicgames.com"))
+    if (url)
     {
-        std::wstring newurl = Platinum::BackendURL;
+        const wchar_t* domains[] = { L"epicgames.com", L"epicgames.dev", L"epicgames.net" };
+        const wchar_t* endpoint = nullptr;
 
-        const wchar_t* endpoint = std::wcsstr(url, L"epicgames.com");
-        if (endpoint)
+        for (const auto& domain : domains)
         {
-            endpoint += wcslen(L"epicgames.com");
-            if (*endpoint != L'/') newurl += L'/';
-            newurl += endpoint;
+            const wchar_t* found = std::wcsstr(url, domain);
+            if (found)
+            {
+                endpoint = found + wcslen(domain);
+                break;
+            }
         }
 
-        HttpRequest->SetURL(newurl.c_str());
+        if (endpoint)
+        {
+            std::wstring newurl = Platinum::BackendURL;
+            if (*endpoint != L'/') newurl += L'/';
+            newurl += endpoint;
+
+            HttpRequest->SetURL(newurl.c_str());
+        }
     }
 
     return Originals::ProcessRequest(HttpRequest);
@@ -53,20 +65,29 @@ bool Request::ProcessRequest(Containers::FCurlHttpRequest* HttpRequest)
 bool Request::EOSProcessRequest(Containers::FCurlHttpRequest* HttpRequest)
 {
     auto url = HttpRequest->GetURL().ToString();
-
-    if (url && std::wcsstr(url, L"epicgames.dev"))
+    if (url)
     {
-        std::wstring newurl = Platinum::BackendURL;
+        const wchar_t* domains[] = { L"epicgames.com", L"epicgames.dev", L"epicgames.net" };
+        const wchar_t* endpoint = nullptr;
 
-        const wchar_t* endpoint = std::wcsstr(url, L"epicgames.dev");
-        if (endpoint)
+        for (const auto& domain : domains)
         {
-            endpoint += wcslen(L"epicgames.com");
-            if (*endpoint != L'/') newurl += L'/';
-            newurl += endpoint;
+            const wchar_t* found = std::wcsstr(url, domain);
+            if (found)
+            {
+                endpoint = found + wcslen(domain);
+                break;
+            }
         }
 
-        HttpRequest->SetURL(newurl.c_str());
+        if (endpoint)
+        {
+            std::wstring newurl = Platinum::BackendURL;
+            if (*endpoint != L'/') newurl += L'/';
+            newurl += endpoint;
+
+            HttpRequest->SetURL(newurl.c_str());
+        }
     }
 
     return Originals::EOSProcessRequest(HttpRequest);
