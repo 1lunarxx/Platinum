@@ -9,10 +9,11 @@ uintptr_t Finders::FindProcessRequest()
     const std::vector<uint8_t> p5 = { 0x48, 0x83, 0xEC };
 
     auto s = Memcury::Scanner::FindStringRef(L"STAT_FCurlHttpRequest_ProcessRequest", Memcury::PE::GetModuleBase(), false);
-    if (!s.IsValid()) s = Memcury::Scanner::FindStringRef(L"STAT_FCurlHttpRequest_ProcessRequest");
+    if (!s.IsValid()) s = Memcury::Scanner::FindStringRef(L"Could not set libcurl options for easy handle, processing HTTP request failed. Increase verbosity for additional information.");
 
     uintptr_t addr = 0;
-    if (s.IsValid()) {
+    if (s.IsValid())
+    {
         addr = s.ScanFor(p1, false).ScanFor(p2, false).Get();
         if (!addr) addr = s.ScanFor(p5, false).ScanFor(p2, false).Get();
         if (!addr) addr = s.ScanFor(p3, false).Get();

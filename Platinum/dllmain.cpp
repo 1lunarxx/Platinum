@@ -1,6 +1,7 @@
 #include "framework.h"
 #include "Platinum.h"
 #include <Source/Public/Request.h>
+#include <Source/Public/Client.h>
 
 void Main()
 {
@@ -12,9 +13,10 @@ void Main()
         SetConsoleTitleA("Platinum | https://github.com/1lunarxx/Platinum");
     }
 
-    MH_Initialize();
+    //MH_Initialize();
     Request::Patch();
-    MH_EnableHook(MH_ALL_HOOKS);
+    //Client::InitConsole();
+    //MH_EnableHook(MH_ALL_HOOKS);
 }
 
 BOOL APIENTRY DllMain(HMODULE Module, DWORD Reason, LPVOID Reserved)

@@ -21,9 +21,7 @@ wchar_t* Containers::FString::ToString()
 Containers::FString Containers::FCurlHttpRequest::GetURL()
 {
     FString Result;
-    auto fn = (FString & (*)(FCurlHttpRequest*, FString&))(*VTable);
-    fn(this, Result);
-    return Result;
+    return ((FString & (*)(FCurlHttpRequest*, FString&))(*VTable))(this, Result);
 }
 
 void Containers::FCurlHttpRequest::SetURL(const wchar_t* url)

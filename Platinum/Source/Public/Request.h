@@ -1,6 +1,7 @@
 #pragma once
 #include "framework.h"
 #include "Source/Public/Containers.h"
+#include "Source/Public/Finders.h"
 
 namespace Request
 {

@@ -4,6 +4,4 @@
 void Client::InitConsole()
 {
 	if (!Platinum::bConsole) return;
-	
-
 }

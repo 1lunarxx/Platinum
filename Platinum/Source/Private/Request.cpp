@@ -5,15 +5,16 @@
 bool Request::ProcessRequest(Containers::FCurlHttpRequest* HttpRequest)
 {
     auto url = HttpRequest->GetURL().ToString();
-
     static int RequestCount = 0;
     RequestCount++;
 
+    // idk how else to do this
     if (RequestCount == 10)
     {
         auto EOSHandle = reinterpret_cast<uintptr_t>(GetModuleHandleA("EOSSDK-Win64-Shipping.dll"));
         if (EOSHandle)
         {
+            printf("EOSHandle");
             auto Scanner = Memcury::Scanner::FindStringRef(L"ProcessRequest failed. URL '%s' is not using a whitelisted domain. %p", EOSHandle);
 
             Originals::EOSProcessRequest = Scanner.ScanFor({ 0x48, 0x89, 0x5C }, false).GetAs<decltype(Originals::EOSProcessRequest)>();
@@ -71,7 +72,24 @@ bool Request::EOSProcessRequest(Containers::FCurlHttpRequest* HttpRequest)
     return Originals::EOSProcessRequest(HttpRequest);
 }
 
+// cant minhook..
 void Request::Patch()
 {
-    Hook(Finders::FindProcessRequest(), ProcessRequest, (void**)&Originals::ProcessRequest);
+    uintptr_t ProcessRequestAddr = Finders::FindProcessRequest();
+    if (!ProcessRequestAddr) return;
+
+    Originals::ProcessRequest = reinterpret_cast<decltype(Originals::ProcessRequest)>(ProcessRequestAddr);
+
+    void** PointerRef = Memcury::Scanner::FindPointerRef((void*)ProcessRequestAddr).GetAs<void**>();
+    if (PointerRef)
+    {
+        DWORD oldProtect;
+        if (VirtualProtect(PointerRef, sizeof(void*), PAGE_EXECUTE_READWRITE, &oldProtect))
+        {
+            *PointerRef = reinterpret_cast<void*>(ProcessRequest);
+            VirtualProtect(PointerRef, sizeof(void*), oldProtect, &oldProtect);
+        }
+    }
+
+    //Hook(Finders::FindProcessRequest(), ProcessRequest, (void**)&Originals::ProcessRequest);
 }
