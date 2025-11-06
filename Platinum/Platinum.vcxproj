@@ -130,6 +130,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -143,9 +144,13 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="Memcury\Memcury.h" />
     <ClInclude Include="Platinum.h" />
+    <ClInclude Include="Source\Public\Containers.h" />
+    <ClInclude Include="Source\Public\Finders.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="Source\Private\Containers.cpp" />
+    <ClCompile Include="Source\Private\Finders.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
