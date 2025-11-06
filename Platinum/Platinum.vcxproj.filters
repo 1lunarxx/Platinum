@@ -21,13 +21,19 @@
     <ClInclude Include="Platinum.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Memcury\Memcury.h">
+    <ClInclude Include="Libraries\Memcury.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\Public\Finders.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\Public\Containers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\Public\Request.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\MinHook.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -39,6 +45,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\Private\Finders.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Private\Request.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

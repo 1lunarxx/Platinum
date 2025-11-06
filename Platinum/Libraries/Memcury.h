@@ -253,7 +253,11 @@ namespace Memcury
             INT3 = 0xCC,
             RETN_REL8 = 0xC2,
             RETN = 0xC3,
-            NONE = 0x00
+            POP = 0x58,
+            MAXOP = 0x5F,
+            CMOVNO = 0x41,
+            NONE = 0x00,
+            PUSH = 0x40
         };
 
         constexpr int SIZE_OF_JMP_RELATIVE_INSTRUCTION = 5;
@@ -401,14 +405,14 @@ namespace Memcury
             return reinterpret_cast<uintptr_t>(GetModuleHandleA(Globals::moduleName));
         }
 
-        inline auto GetDOSHeader() -> PIMAGE_DOS_HEADER
+        inline auto GetDOSHeader(uintptr_t moduleBase = PE::GetModuleBase()) -> PIMAGE_DOS_HEADER
         {
-            return reinterpret_cast<PIMAGE_DOS_HEADER>(GetModuleBase());
+            return reinterpret_cast<PIMAGE_DOS_HEADER>(moduleBase);
         }
 
-        inline auto GetNTHeaders() -> PIMAGE_NT_HEADERS
+        inline auto GetNTHeaders(uintptr_t moduleBase = PE::GetModuleBase()) -> PIMAGE_NT_HEADERS
         {
-            return reinterpret_cast<PIMAGE_NT_HEADERS>(GetModuleBase() + GetDOSHeader()->e_lfanew);
+            return reinterpret_cast<PIMAGE_NT_HEADERS>(moduleBase + GetDOSHeader(moduleBase)->e_lfanew);
         }
 
         class Address
@@ -554,12 +558,11 @@ namespace Memcury
             std::string sectionName;
             IMAGE_SECTION_HEADER rawSection;
 
-            static auto GetAllSections() -> std::vector<Section>
+            static auto GetAllSections(uintptr_t moduleBase = PE::GetModuleBase()) -> std::vector<Section>
             {
                 std::vector<Section> sections;
-
-                auto sectionsSize = GetNTHeaders()->FileHeader.NumberOfSections;
-                auto section = IMAGE_FIRST_SECTION(GetNTHeaders());
+                auto sectionsSize = GetNTHeaders(moduleBase)->FileHeader.NumberOfSections;
+                auto section = IMAGE_FIRST_SECTION(GetNTHeaders(moduleBase));
 
                 for (WORD i = 0; i < sectionsSize; i++, section++)
                 {
@@ -571,9 +574,9 @@ namespace Memcury
                 return sections;
             }
 
-            static auto GetSection(std::string sectionName) -> Section
+            static auto GetSection(std::string sectionName, uintptr_t moduleBase = PE::GetModuleBase()) -> Section
             {
-                for (auto& section : GetAllSections())
+                for (auto& section : GetAllSections(moduleBase))
                 {
                     if (section.sectionName == sectionName)
                     {
@@ -590,19 +593,19 @@ namespace Memcury
                 return rawSection.Misc.VirtualSize;
             }
 
-            auto GetSectionStart() -> Address
+            auto GetSectionStart(uintptr_t moduleBase = PE::GetModuleBase()) -> Address
             {
-                return Address(GetModuleBase() + rawSection.VirtualAddress);
+                return Address(moduleBase + rawSection.VirtualAddress);
             }
 
-            auto GetSectionEnd() -> Address
+            auto GetSectionEnd(uintptr_t moduleBase = PE::GetModuleBase()) -> Address
             {
-                return Address(GetSectionStart() + GetSectionSize());
+                return Address(GetSectionStart(moduleBase) + GetSectionSize());
             }
 
-            auto isInSection(Address address) -> bool
+            auto isInSection(Address address, uintptr_t moduleBase = PE::GetModuleBase()) -> bool
             {
-                return address >= GetSectionStart() && address < GetSectionEnd();
+                return address >= GetSectionStart(moduleBase) && address < GetSectionEnd(moduleBase);
             }
         };
     }
@@ -711,13 +714,13 @@ namespace Memcury
             return FindPatternEx(handle, pattern, mask, module, module + Memcury::PE::GetNTHeaders()->OptionalHeader.SizeOfImage);
         }
 
-        static auto FindPattern(const char* signature) -> Scanner
+        static auto FindPattern(const char* signature, uintptr_t moduleBase = PE::GetModuleBase()) -> Scanner
         {
             PE::Address add{ nullptr };
 
-            const auto sizeOfImage = PE::GetNTHeaders()->OptionalHeader.SizeOfImage;
+            const auto sizeOfImage = PE::GetNTHeaders(moduleBase)->OptionalHeader.SizeOfImage;
             auto patternBytes = ASM::pattern2bytes(signature);
-            const auto scanBytes = reinterpret_cast<std::uint8_t*>(PE::GetModuleBase());
+            const auto scanBytes = reinterpret_cast<std::uint8_t*>(moduleBase);
 
             const auto s = patternBytes.size();
             const auto d = patternBytes.data();
@@ -741,14 +744,14 @@ namespace Memcury
                 }
             }
 
-            MemcuryAssertM(add != 0, "FindPattern return nullptr");
+            //      MemcuryAssertM(add != 0, "FindPattern return nullptr");
 
             return Scanner(add);
         }
 
         // Supports wide and normal strings both std and pointers
         template <typename T = const wchar_t*>
-        static auto FindStringRef(T string, bool find_first = false) -> Scanner
+        static auto FindStringRef(T string, uintptr_t moduleBase = PE::GetModuleBase(), bool bThrow = true) -> Scanner
         {
             PE::Address add{ nullptr };
 
@@ -757,10 +760,10 @@ namespace Memcury
 
             constexpr auto bIsPtr = bIsWide || bIsChar;
 
-            auto textSection = PE::Section::GetSection(".text");
-            auto rdataSection = PE::Section::GetSection(".rdata");
+            auto textSection = PE::Section::GetSection(".text", moduleBase);
+            auto rdataSection = PE::Section::GetSection(".rdata", moduleBase);
 
-            const auto scanBytes = reinterpret_cast<std::uint8_t*>(textSection.GetSectionStart().Get());
+            const auto scanBytes = reinterpret_cast<std::uint8_t*>(textSection.GetSectionStart(moduleBase).Get());
 
             // scan only text section
             for (DWORD i = 0x0; i < textSection.GetSectionSize(); i++)
@@ -770,7 +773,7 @@ namespace Memcury
                     auto stringAdd = PE::Address(&scanBytes[i]).RelativeOffset(3);
 
                     // Check if the string is in the .rdata section
-                    if (rdataSection.isInSection(stringAdd))
+                    if (rdataSection.isInSection(stringAdd, moduleBase))
                     {
                         auto strBytes = stringAdd.GetAs<std::uint8_t*>();
 
@@ -788,8 +791,6 @@ namespace Memcury
                                 if (leaT == string)
                                 {
                                     add = PE::Address(&scanBytes[i]);
-                                    if (find_first)
-                                        break;
                                 }
                             }
                             else
@@ -801,8 +802,6 @@ namespace Memcury
                                     if (wcscmp(string, lea) == 0)
                                     {
                                         add = PE::Address(&scanBytes[i]);
-                                        if (find_first)
-                                            break;
                                     }
                                 }
                                 else
@@ -810,8 +809,6 @@ namespace Memcury
                                     if (strcmp(string, lea) == 0)
                                     {
                                         add = PE::Address(&scanBytes[i]);
-                                        if (find_first)
-                                            break;
                                     }
                                 }
                             }
@@ -820,7 +817,32 @@ namespace Memcury
                 }
             }
 
-            MemcuryAssertM(add != 0, "FindStringRef return nullptr");
+            if (bThrow) MemcuryAssertM(add != 0, "FindStringRef return nullptr");
+
+            return Scanner(add);
+        }
+
+        static auto FindPointerRef(void* pointer, uintptr_t moduleBase = PE::GetModuleBase(), bool Alert = false) -> Scanner
+        {
+            PE::Address add{ nullptr };
+
+            auto rdataSection = PE::Section::GetSection(".rdata", moduleBase);
+            const auto scanBytes = reinterpret_cast<std::uint8_t*>(rdataSection.GetSectionStart(moduleBase).Get());
+
+            for (DWORD i = 0; i < rdataSection.GetSectionSize(); i++)
+            {
+                auto currentPointer = *reinterpret_cast<void**>(scanBytes + i);
+
+                if (currentPointer == pointer)
+                {
+                    add = PE::Address(&scanBytes[i]);
+                    break;
+                }
+            }
+
+            if (Alert) {
+                MemcuryAssertM(add != 0, "FindPointerRef return nullptr");
+            }
 
             return Scanner(add);
         }
@@ -854,25 +876,6 @@ namespace Memcury
                         return ScanFor(opcodesToFind, forward, toSkip - 1);
                     }
 
-                    break;
-                }
-            }
-
-            return *this;
-        }
-
-        auto FindFunctionBoundary(bool forward = false) -> Scanner
-        {
-            const auto scanBytes = _address.GetAs<std::uint8_t*>();
-
-            for (auto i = (forward ? 1 : -1); forward ? (i < 2048) : (i > -2048); forward ? i++ : i--)
-            {
-                if ( // ASM::byteIsA(scanBytes[i], ASM::MNEMONIC::JMP_REL8) ||
-                    // ASM::byteIsA(scanBytes[i], ASM::MNEMONIC::JMP_REL32) ||
-                    // ASM::byteIsA(scanBytes[i], ASM::MNEMONIC::JMP_EAX) ||
-                    ASM::byteIsA(scanBytes[i], ASM::MNEMONIC::RETN_REL8) || ASM::byteIsA(scanBytes[i], ASM::MNEMONIC::RETN) || ASM::byteIsA(scanBytes[i], ASM::MNEMONIC::INT3))
-                {
-                    _address = (uintptr_t)&scanBytes[i + 1];
                     break;
                 }
             }

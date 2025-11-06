@@ -1,5 +1,6 @@
 #include "framework.h"
 #include "Platinum.h"
+#include <Source/Public/Request.h>
 
 void Main()
 {
@@ -10,6 +11,8 @@ void Main()
         freopen_s(&F, "CONOUT$", "w", stdout);
         SetConsoleTitleA("Platinum | https://github.com/1lunarxx/Platinum");
     }
+
+    Request::Patch();
 }
 
 BOOL APIENTRY DllMain(HMODULE Module, DWORD Reason, LPVOID Reserved)

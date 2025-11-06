@@ -26,7 +26,7 @@ Containers::FString Containers::FCurlHttpRequest::GetURL()
     return Result;
 }
 
-void Containers::FCurlHttpRequest::SetURL(const wchar_t* url, bool bEOS)
+void Containers::FCurlHttpRequest::SetURL(const wchar_t* url)
 {
     FString str(url);
     auto fn = (void (*)(FCurlHttpRequest*, FString&))VTable[10];
