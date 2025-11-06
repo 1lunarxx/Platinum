@@ -7,3 +7,5 @@ Platinum is a universal Fortnite client and redirect.
  - Reset On Release
  - EOS Support
  - Console
+
+## If you have any issues, please let me know on discord or make a issue. Discord: lunarx__
