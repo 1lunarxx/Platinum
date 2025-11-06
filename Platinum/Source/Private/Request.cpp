@@ -1,11 +1,16 @@
 #include "Source/Public/Request.h"
 #include <Source/Public/Finders.h>
-#include <fstream>
-#include <iostream>
+#include <Platinum.h>
 
-bool Request::ProcessRequest(Containers::FCurlHttpRequest HttpRequest)
+bool Request::ProcessRequest(Containers::FCurlHttpRequest* HttpRequest)
 {
-    HttpRequest.GetURL().ToString();
+    auto url = HttpRequest->GetURL().ToString();
+    if (url && std::wcsstr(url, L"epicgames.com"))
+    {
+        HttpRequest->SetURL(Platinum::BackendURL);
+
+        std::wcout << HttpRequest->GetURL().ToString() << std::endl;
+    }
 
     return Originals::ProcessRequest(HttpRequest);
 }

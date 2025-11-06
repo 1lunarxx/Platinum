@@ -6,9 +6,9 @@ namespace Request
 {
 	namespace Originals
 	{
-		inline static bool (*ProcessRequest)(Containers::FCurlHttpRequest HttpRequest);
+		inline static bool (*ProcessRequest)(Containers::FCurlHttpRequest* HttpRequest);
 	}
 
-	bool ProcessRequest(Containers::FCurlHttpRequest);
+	bool ProcessRequest(Containers::FCurlHttpRequest*);
 	void Patch();
 }
