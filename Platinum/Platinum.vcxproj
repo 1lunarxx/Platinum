@@ -147,12 +147,14 @@
     <ClInclude Include="Libraries\Memcury.h" />
     <ClInclude Include="Libraries\MinHook.h" />
     <ClInclude Include="Platinum.h" />
+    <ClInclude Include="Source\Public\Client.h" />
     <ClInclude Include="Source\Public\Containers.h" />
     <ClInclude Include="Source\Public\Finders.h" />
     <ClInclude Include="Source\Public\Request.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="Source\Private\Client.cpp" />
     <ClCompile Include="Source\Private\Containers.cpp" />
     <ClCompile Include="Source\Private\Finders.cpp" />
     <ClCompile Include="Source\Private\Request.cpp" />

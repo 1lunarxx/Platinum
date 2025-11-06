@@ -4,7 +4,7 @@
 
 void Main()
 {
-    if (Platinum::bConsole)
+    if (Platinum::bLog)
     {
         AllocConsole();
         FILE* F;
